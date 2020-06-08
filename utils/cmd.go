@@ -3,7 +3,6 @@ package utils
 import (
 	"archive/zip"
 	"bytes"
-	"golang.org/x/text/encoding/simplifiedchinese"
 	"io"
 	"os"
 	"os/exec"
@@ -15,28 +14,6 @@ import (
 	"time"
 )
 
-type Charset string
-
-const (
-	UTF8    = Charset("UTF-8")
-	GB18030 = Charset("GB18030")
-)
-
-func ConvertByte2String(byte []byte, charset Charset) string {
-
-	var str string
-	switch charset {
-	case GB18030:
-		var decodeBytes, _ = simplifiedchinese.GB18030.NewDecoder().Bytes(byte)
-		str = string(decodeBytes)
-	case UTF8:
-		fallthrough
-	default:
-		str = string(byte)
-	}
-
-	return str
-}
 func GetLocalFileLastWriteTime(path string) (createTime time.Time, err error) {
 	osType := runtime.GOOS
 	fileInfo, err := os.Stat(path)
@@ -57,18 +34,9 @@ func GetLocalFileLastWriteTime(path string) (createTime time.Time, err error) {
 	return info, err
 }
 
-func WinCmdDel(localFileName string) {
-	cmd := exec.Command("cmd", "/c", "del", localFileName)
-	stdoutStderr, err := cmd.CombinedOutput()
-	if err != nil {
-		Error.Fatal(err)
-	}
-	Info.Printf("%s\n", ConvertByte2String(stdoutStderr, GB18030))
-}
-
 func WinCmdRename(localFileName string) {
 	t := time.Now().Format("20060102-1504")
-	bakLocalFileName := localFileName + t
+	bakLocalFileName := localFileName + "-"  + t
 	err := os.Rename(localFileName, bakLocalFileName)
 	if err != nil {
 		Error.Fatal(err)
@@ -125,7 +93,7 @@ func Health(webHook, localServerName string) bool {
 }
 
 //解压
-func Unzip(zipFile string, destDir string) error {
+func UnZip(zipFile string, destDir string) error {
 	zipReader, err := zip.OpenReader(zipFile)
 	if err != nil {
 		return err

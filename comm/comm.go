@@ -75,10 +75,20 @@ func CmdComm(ossBucket *oss.Bucket, localPath, localServerName, localServerFile,
 
 		//解压
 		unzipLocalFilePath := localPath + localServerName
-		utils.Info.Println(unzipLocalFilePath)
-		err := utils.Unzip(newLocalFileName, unzipLocalFilePath)
+		utils.Info.Printf("解压路径: %s",unzipLocalFilePath)
+		err := utils.UnZip(newLocalFileName, unzipLocalFilePath)
 		if err != nil {
 			utils.Error.Printf("解压失败: %v", err)
+		} else {
+			utils.Info.Printf("解压完成.")
+		}
+
+		//删除oss下载的压缩文件
+		delErr := os.Remove(newLocalFileName)
+		if delErr != nil {
+			utils.Error.Printf("删除失败: %v", delErr)
+		} else {
+			utils.Info.Printf("已删除压缩文件.")
 		}
 
 		//启动服务
@@ -99,4 +109,55 @@ func CmdComm(ossBucket *oss.Bucket, localPath, localServerName, localServerFile,
 		}
 	}
 	utils.Info.Printf("END: 服务%s检查更新操作退出.\n", localServerName)
+}
+
+func CmdCommWeb(ossBucket *oss.Bucket, localPath, localServerName, localServerFile string) {
+	utils.Info.Printf("Start: 服务%s开始检查版本更新....\n", localServerName)
+
+	//获取oss最新的文件名、文件创建时间
+	ossFileName, ossFileCreateTime := utils.GetOssFileInfo(ossBucket, localServerName)
+	utils.Info.Printf("oss最新的文件:%s 创建时间:%v\n", ossFileName, ossFileCreateTime)
+
+	//获取本地文件的创建时间
+	localFileCreateTimeInfo, err := utils.GetLocalFileLastWriteTime(localServerFile)
+	if err != nil {
+		defer func() {
+			if msg := recover(); msg != nil {
+				utils.Warning.Println(msg)
+			}
+		}()
+		utils.Error.Println(err)
+	}
+
+	//格式化时间，oss与本地文件比较创建时间
+	if utils.DefineFormatTime(ossFileCreateTime).Before(utils.DefineFormatTime(localFileCreateTimeInfo)) {
+		//2020-05-10 22:02:27 +0000 UTC  > 2020-05-10 05:39:55 +0000 UTC
+		utils.Info.Printf("本地已是最新版本:local %v => oss %v", utils.DefineFormatTime(localFileCreateTimeInfo), utils.DefineFormatTime(ossFileCreateTime))
+	} else {
+		utils.Info.Printf("发现新版本:local %v < oss %v", utils.DefineFormatTime(localFileCreateTimeInfo), utils.DefineFormatTime(ossFileCreateTime))
+		//下载最新文件到本地
+		newLocalFileName := localPath + "\\" + ossFileName
+		utils.GetOssFile(ossBucket, ossFileName, newLocalFileName)
+
+		//备份旧版本文件
+		utils.WinCmdRename(localServerFile)
+
+		//解压
+		unzipLocalFilePath := localPath + localServerName
+		utils.Info.Printf("解压路径: %s",unzipLocalFilePath)
+		err := utils.UnZip(newLocalFileName, unzipLocalFilePath)
+		if err != nil {
+			utils.Error.Printf("解压失败: %v", err)
+		} else {
+			utils.Info.Printf("解压完成.")
+		}
+
+		//删除oss下载的压缩文件
+		delErr := os.Remove(newLocalFileName)
+		if delErr != nil {
+			utils.Error.Printf("删除失败: %v", delErr)
+		} else {
+			utils.Info.Printf("已删除压缩文件.")
+		}
+	}
 }
