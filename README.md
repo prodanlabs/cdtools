@@ -40,7 +40,9 @@ Usage of G:\GoDevWorker\cdtools\cdtoos.exe:
   },
   "local": {
     "Path": "E:\\APP\\",
-    "Server": "demo-server,demo1-server"
+    "Server": "demo-server,demo-web",
+    "KeywordsOfWeb": "web",
+    "WebPath": "E:\\webdir\\"
   },
   "webHook": "https://oapi.dingtalk.com/robot/send?access_token=xxx"
 }
@@ -48,9 +50,10 @@ Usage of G:\GoDevWorker\cdtools\cdtoos.exe:
 
 1. 支持多服务，在`local.Server`增加, 以`,` 号隔开;
 2. webHook是钉钉机器人的钩子，其他的钩子未测试;
-3. `local.Path`服务文件路径。如 `E:\\APP\\demo-server\demo-server.jar`  oss同理 `${bucket}/demo-server/demo-server*.zip` ;
-4. 目前只支持java的`.jar` ;
-
+3. `local.Path`,`local.WebPath`服务文件路径。如 `E:\\APP\\demo-server\demo-server.jar`  oss同理 `${bucket}/demo-server/demo-server*.zip` ;
+4. 目前只支持java的`.jar`后缀，web服务的目录必须为`dist` ;
+5. 压缩文件格式为`zip`
+6. `local.KeywordsOfWeb` 区分前后端服务的关键字，默认 `web`,在`local.Server`中包含 `web`的服务，都归类的前端服务
 ## 示例
 
 Jenkins上传编译好的jar包到oss
@@ -60,10 +63,6 @@ mv ${projectName}*.jar ${projectName}.jar
 zip -q -r ${projectName}-${BUILD_NUMBER}.zip ${projectName}.jar
 sh /root/sh/oss-test.sh put ${projectName}-${BUILD_NUMBER}.zip ${projectName}/${projectName}-${BUILD_NUMBER}.zip
 rm -f ${projectName}-${BUILD_NUMBER}.zip ${projectName}.jar
-```
-
-```
-
 ```
 
 
