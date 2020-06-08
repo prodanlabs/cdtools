@@ -2,12 +2,14 @@
   "oss": {
     "url": "http://xxx.aliyuncs.com",
     "id": "xxx",
-    "key": "x",
+    "key": "xxx",
     "bucket": "xxx"
   },
   "local": {
     "Path": "E:\\APP\\",
-    "Server": "demo-server,demo1-server"
+    "Server": "demo-server,demo-web",
+    "KeywordsOfWeb": "web",
+    "WebPath": "E:\\webdir\\"
   },
   "webHook": "https://oapi.dingtalk.com/robot/send?access_token=xxx"
 }
